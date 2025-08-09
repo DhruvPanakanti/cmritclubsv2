@@ -113,6 +113,11 @@ export default clerkMiddleware(async (auth, req) => {
         const [college, type, identifier] = pathSegments;
         const validation = validateConsistentRoute(college, type, identifier);
         isAtValidOfficialRoute = validation.isValid;
+      } else if (pathSegments.length === 4 && pathSegments[3] === 'club-permissions') {
+        // Consistent route: [college]/[type]/[identifier]/club-permissions
+        const [college, type, identifier] = pathSegments;
+        const validation = validateConsistentRoute(college, type, identifier);
+        isAtValidOfficialRoute = validation.isValid;
       }
       
       if (!isAtValidOfficialRoute && !isAtOnboarding && !isAtPending) {

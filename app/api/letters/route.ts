@@ -69,7 +69,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // Create the letter
+    // Create the letter (status will be auto-initialized by trigger)
     const { data: letter, error: createError } = await supabase
       .from('letters')
       .insert({
@@ -78,7 +78,7 @@ export async function POST(request: NextRequest) {
         subject: subject.trim(),
         body: body.trim(),
         club_members_by_dept,
-        status: 'draft'
+        closing: closing?.trim() || null
       })
       .select()
       .single();

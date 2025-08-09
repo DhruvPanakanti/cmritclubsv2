@@ -3,6 +3,7 @@ import { currentUser } from '@clerk/nextjs/server';
 import { getUserOfficialInfo } from '@/lib/actions/middleware-helpers';
 import { College, HODRole, GeneralRole } from '@/types/globals';
 import { validateConsistentRoute, generateConsistentBreadcrumbs } from '@/lib/utils/route-validation';
+import Link from 'next/link';
 
 interface ConsistentDashboardPageProps {
   params: Promise<{
@@ -87,12 +88,12 @@ export default async function ConsistentDashboardPage({ params }: ConsistentDash
           <div className="bg-white rounded-lg shadow p-6">
             <h3 className="text-lg font-semibold text-gray-900 mb-2">Club Applications</h3>
             <p className="text-gray-600 mb-4">{dashboardConfig.applicationsDescription}</p>
-            <a
+            <Link
               href={`/${college}/${type}/${identifier}/club-applications`}
               className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
             >
               View Applications
-            </a>
+            </Link>
           </div>
 
           {/* Statistics Card */}
@@ -113,6 +114,18 @@ export default async function ConsistentDashboardPage({ params }: ConsistentDash
                 <span className="text-sm font-medium text-red-600">-</span>
               </div>
             </div>
+          </div>
+
+          {/* Club Permissions Card */}
+          <div className="bg-white rounded-lg shadow p-6">
+            <h3 className="text-lg font-semibold text-gray-900 mb-2">Club Permissions</h3>
+            <p className="text-gray-600 mb-4">Review and approve club permissions from departments</p>
+            <Link
+              href={`/${college}/${type}/${identifier}/club-permissions`}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-green-600 hover:bg-green-700"
+            >
+              View Letters
+            </Link>
           </div>
 
           {/* Quick Actions Card */}

@@ -17,6 +17,8 @@ import {
   AlertDialogTrigger,
 } from '@/components/ui/alert-dialog';
 import { toast } from 'sonner';
+import { LetterStatusPanel } from './letter-status-panel';
+import { LetterViewModal } from './letter-view-modal';
 
 interface Letter {
   id: string;
@@ -24,7 +26,13 @@ interface Letter {
   recipients: string[];
   status: string;
   created_at: string;
-  club_members_by_dept: Record<string, string[]>;
+  club_members_by_dept: Record<string, Array<{
+    number: string;
+    status: 'pending' | 'approved' | 'rejected';
+    approved_by?: string;
+  }>>;
+  body?: string;
+  closing?: string;
 }
 
 interface LettersListProps {
@@ -36,12 +44,14 @@ interface LettersListProps {
 export function LettersList({ letters, collectionName, college }: LettersListProps) {
   const router = useRouter();
   const [deletingId, setDeletingId] = useState<string | null>(null);
+  const [selectedLetter, setSelectedLetter] = useState<Letter | null>(null);
+  const [isViewModalOpen, setIsViewModalOpen] = useState(false);
 
-  const handleDelete = async (letterId: string, letterSubject: string) => {
-    setDeletingId(letterId);
+  const handleDelete = async (id: string, letterSubject: string) => {
+    setDeletingId(id);
     
     try {
-      const response = await fetch(`/api/letters/${letterId}`, {
+      const response = await fetch(`/api/letters/${id}`, {
         method: 'DELETE',
       });
 
@@ -60,14 +70,28 @@ export function LettersList({ letters, collectionName, college }: LettersListPro
     }
   };
 
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'draft':
-        return 'bg-gray-100 text-gray-800';
-      case 'sent':
-        return 'bg-blue-100 text-blue-800';
-      case 'delivered':
+  const handleViewLetter = (letter: Letter) => {
+    setSelectedLetter(letter);
+    setIsViewModalOpen(true);
+  };
+
+  const getOverallStatus = (status: Record<string, string>) => {
+    const values = Object.values(status);
+    if (values.length === 0) return 'pending';
+    
+    if (values.every(s => s === 'approved')) return 'approved';
+    if (values.some(s => s === 'rejected')) return 'rejected';
+    return 'pending';
+  };
+
+  const getStatusColor = (overallStatus: string) => {
+    switch (overallStatus) {
+      case 'approved':
         return 'bg-green-100 text-green-800';
+      case 'rejected':
+        return 'bg-red-100 text-red-800';
+      case 'pending':
+        return 'bg-yellow-100 text-yellow-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -119,11 +143,14 @@ export function LettersList({ letters, collectionName, college }: LettersListPro
               <div className="flex-1 min-w-0">
                 <div className="flex items-center space-x-3 mb-2">
                   <FileText className="w-5 h-5 text-gray-400" />
-                  <h4 className="text-lg font-medium text-gray-900 truncate">
+                  <button 
+                    onClick={() => handleViewLetter(letter)}
+                    className="text-lg font-medium text-gray-900 truncate hover:text-blue-600 transition-colors"
+                  >
                     {letter.subject}
-                  </h4>
-                  <Badge className={getStatusColor(letter.status)}>
-                    {letter.status.charAt(0).toUpperCase() + letter.status.slice(1)}
+                  </button>
+                  <Badge className={getStatusColor(getOverallStatus(letter.status))}>
+                    {getOverallStatus(letter.status).charAt(0).toUpperCase() + getOverallStatus(letter.status).slice(1)}
                   </Badge>
                 </div>
                 
@@ -143,6 +170,12 @@ export function LettersList({ letters, collectionName, college }: LettersListPro
                     <span>{new Date(letter.created_at).toLocaleDateString()}</span>
                   </div>
                 </div>
+                
+                {/* Status Panel */}
+                <LetterStatusPanel 
+                  recipients={letter.recipients}
+                  status={letter.status}
+                />
               </div>
               
               <div className="flex items-center space-x-2 ml-4">
@@ -181,6 +214,16 @@ export function LettersList({ letters, collectionName, college }: LettersListPro
           </div>
         ))}
       </div>
+      
+      {/* Letter View Modal */}
+      <LetterViewModal 
+        letter={selectedLetter}
+        isOpen={isViewModalOpen}
+        onClose={() => {
+          setIsViewModalOpen(false);
+          setSelectedLetter(null);
+        }}
+      />
     </div>
   );
 }
